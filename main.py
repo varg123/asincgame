@@ -46,6 +46,10 @@ async def blink(canvas, row, column, symbol='*', timeout=0):
 
 async def animate_spaceship(canvas, row, column):
     while True:
+        row_up, col_up, _ = read_controls(canvas)
+        row += row_up
+        column += col_up
+
         for frame in get_space_ship_frames():
             draw_frame(canvas, row, column, frame)
             for _ in range(3):
@@ -84,6 +88,7 @@ def init_scope_range():
     global MAX_ROW, MAX_COL, MIN_ROW, MIN_COL
     MAX_ROW, MAX_COL = rows_count - 2, cols_count - 2
     MIN_ROW, MIN_COL = 1, 1
+    window.nodelay(True)
 
 
 if __name__ == '__main__':
