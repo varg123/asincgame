@@ -44,19 +44,24 @@ def draw_star(canvas):
         canvas.refresh()
 
 
-async def blink(canvas, row, column, symbol='*'):
+TIC_TIMEOUT = 0.1
+
+
+async def blink(canvas, row, column, symbol='*', timeout=TIC_TIMEOUT):
+    timeout *= 10000
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
-        await asyncio.sleep(0)
-
+        for _ in range(int(5 * timeout)):
+            await asyncio.sleep(0)
         canvas.addstr(row, column, symbol)
-        await asyncio.sleep(0)
-
+        for _ in range(int(3 * timeout)):
+            await asyncio.sleep(0)
         canvas.addstr(row, column, symbol, curses.A_BOLD)
-        await asyncio.sleep(0)
-
+        for _ in range(int(5 * timeout)):
+            await asyncio.sleep(0)
         canvas.addstr(row, column, symbol)
-        await asyncio.sleep(0)
+        for _ in range(int(3 * timeout)):
+            await asyncio.sleep(0)
 
 
 def draw_asinc_star(canvas):
@@ -83,7 +88,7 @@ def draw_5_stars(canvas):
             except StopIteration:
                 coroutines_stars.remove(coroutine)
         canvas.refresh()
-        time.sleep(1)
+        # time.sleep(1)
 
 
 if __name__ == '__main__':
