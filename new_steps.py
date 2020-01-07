@@ -11,20 +11,24 @@ MAX_COL = 0
 SYMBOLS = '+*.:'
 
 
-async def blink(canvas, row, column, symbol='*', timeout=TIC_TIMEOUT):
+async def blink(canvas, row, column, symbol='*', timeout=TIC_TIMEOUT, start_timeot=0):
     timeout *= 10000
+    timeout = int(timeout)
+
     while True:
+        for _ in range(start_timeot*timeout):
+            await asyncio.sleep(0)
         canvas.addstr(row, column, symbol, curses.A_DIM)
-        for _ in range(int(5 * timeout)):
+        for _ in range(5 * timeout):
             await asyncio.sleep(0)
         canvas.addstr(row, column, symbol)
-        for _ in range(int(3 * timeout)):
+        for _ in range(3 * timeout):
             await asyncio.sleep(0)
         canvas.addstr(row, column, symbol, curses.A_BOLD)
-        for _ in range(int(5 * timeout)):
+        for _ in range(5 * timeout):
             await asyncio.sleep(0)
         canvas.addstr(row, column, symbol)
-        for _ in range(int(3 * timeout)):
+        for _ in range(3 * timeout):
             await asyncio.sleep(0)
 
 
@@ -35,7 +39,8 @@ def draw(canvas):
     for i in range(500):
         col, row = randint(MIN_COL, MAX_COL), randint(MIN_ROW, MAX_ROW)
         simbol = choice(SYMBOLS)
-        coroutines_stars.append(blink(canvas, row, col, simbol))
+        start_timeout = randint(1, 10)
+        coroutines_stars.append(blink(canvas, row, col, simbol, 0.05, start_timeout))
     while True:
         for coroutine in coroutines_stars.copy():
             try:
