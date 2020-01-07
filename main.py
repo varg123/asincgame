@@ -2,7 +2,9 @@ import time
 import curses
 import asyncio
 from random import randint, choice
-import fire_animation
+from fire_animation import fire
+from curses_tools import draw_frame, read_controls, get_frame_size
+from os.path import abspath, dirname, join
 
 TIC_TIMEOUT = 0.1
 MIN_ROW = 0
@@ -10,6 +12,17 @@ MIN_COL = 0
 MAX_ROW = 0
 MAX_COL = 0
 SYMBOLS = '+*.:'
+DIR_FRAMES = join(dirname(abspath(__file__)), 'frames')
+
+
+def get_space_ship_frames():
+    names_of_the_frames = [
+        'rocket_frame_1.txt',
+        'rocket_frame_2.txt'
+    ]
+    for name in names_of_the_frames:
+        with open(join(DIR_FRAMES, name), 'rt', encoding='utf8') as frame_file:
+            yield frame_file.read()
 
 
 async def blink(canvas, row, column, symbol='*', timeout=0):
@@ -31,6 +44,15 @@ async def blink(canvas, row, column, symbol='*', timeout=0):
             await asyncio.sleep(0)
 
 
+async def animate_spaceship(canvas, row, column):
+    while True:
+        for frame in get_space_ship_frames():
+            draw_frame(canvas, row, column, frame)
+            for _ in range(3):
+                await asyncio.sleep(0)
+            draw_frame(canvas, row, column, frame, True)
+
+
 def draw(canvas):
     canvas.border()
     curses.curs_set(False)
@@ -42,7 +64,8 @@ def draw(canvas):
         coroutines.append(blink(canvas, row, col, simbol, start_timeout))
     start_row = int((MAX_ROW - MIN_ROW) / 2 + MIN_ROW)
     start_column = int((MAX_COL - MIN_COL) / 2 + MIN_COL)
-    coroutines.append(fire_animation.fire(canvas, start_row, start_column))
+    coroutines.append(fire(canvas, start_row, start_column))
+    coroutines.append(animate_spaceship(canvas, 4, 20))
     while True:
         for coroutine in coroutines.copy():
             try:
