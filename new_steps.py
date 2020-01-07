@@ -63,9 +63,25 @@ def draw_asinc_star(canvas):
     row, column = (5, 20)
     curses.curs_set(False)
     star_char = "*"
-    corutine_star = blink(canvas,row,column,star_char)
+    corutine_star = blink(canvas, row, column, star_char)
     while True:
         corutine_star.send(None)
+        canvas.refresh()
+        time.sleep(1)
+
+
+def draw_5_stars(canvas):
+    canvas.border()
+    curses.curs_set(False)
+    coroutines_stars = []
+    for i in range(4):
+        coroutines_stars.append(blink(canvas, 1, i + 1, '*'))
+    while True:
+        for coroutine in coroutines_stars.copy():
+            try:
+                coroutine.send(None)
+            except StopIteration:
+                coroutines_stars.remove(coroutine)
         canvas.refresh()
         time.sleep(1)
 
@@ -74,4 +90,5 @@ if __name__ == '__main__':
     curses.update_lines_cols()  # иницализирует терминал ( записывает canvas.LINES и canvas.COLS)
     # curses.wrapper(draw)
     # curses.wrapper(draw_star)
-    curses.wrapper(draw_asinc_star)
+    # curses.wrapper(draw_asinc_star)
+    curses.wrapper(draw_5_stars)
