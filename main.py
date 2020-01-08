@@ -7,6 +7,7 @@ from curses_tools import draw_frame, read_controls, get_frame_size
 from space_garbage import fly_garbage
 from os.path import abspath, dirname, join
 from itertools import cycle
+from physics import update_speed
 
 TIC_TIMEOUT = 0.1
 MIN_ROW = 0
@@ -53,24 +54,33 @@ async def blink(canvas, row, column, symbol='*', timeout=0):
 
 async def run_spaceship(canvas):
     global spaceship_frame
-    row, column = 5, 5
+    row, column = 5, 8
+    row_speed = column_speed = 0
     while True:
         last_spaceship_frame = spaceship_frame
-        row_up, col_up, _ = read_controls(canvas)
+        row_control, col_control, space_control = read_controls(canvas)
         row_size, column_size = get_frame_size(last_spaceship_frame)
-        if row in range(MIN_ROW + 1, MAX_ROW - row_size + 1):
-            row += row_up
-        elif row_up > 0 and row == MIN_ROW:
-            row += row_up
-        elif row_up < 0 and row == MAX_ROW - row_size + 1:
-            row += row_up
+        row_range = range(MIN_ROW + 1, MAX_ROW - row_size + 1)
+        column_range = range(MIN_COL + 1, MAX_COL - column_size + 1)
 
-        if column in range(MIN_COL + 1, MAX_COL - column_size + 1):
-            column += col_up
-        elif col_up > 0 and column == MIN_COL:
-            column += col_up
-        elif col_up < 0 and column == MAX_COL - column_size + 1:
-            column += col_up
+        row_speed, column_speed = update_speed(row_speed, column_speed, row_control, col_control)
+        row += row_speed
+        column += column_speed
+
+        # TODO: перестало работать ограничение корабля, поправить
+
+        # if row+row_speed in range(MIN_ROW + 1, MAX_ROW - row_size + 1):
+        #     row += row_speed
+        # elif row_speed > 0 and row == MIN_ROW:
+        #     row += row_speed
+        # elif row_speed < 0 and row == MAX_ROW - row_size + 1:
+        #     row += row_speed
+        # if column+column_speed in range(MIN_COL + 1, MAX_COL - column_size + 1):
+        #     column += column_speed
+        # elif column_speed > 0 and column == MIN_COL:
+        #     column += column_speed
+        # elif column_speed < 0 and column == MAX_COL - column_size + 1:
+        #     column += column_speed
 
         draw_frame(canvas, row, column, last_spaceship_frame)
         await sleep(1)
