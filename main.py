@@ -54,18 +54,23 @@ async def blink(canvas, row, column, symbol='*', timeout=0):
 
 async def run_spaceship(canvas):
     global spaceship_frame
+    global coroutines
     row, column = 5, 8
     row_speed = column_speed = 0
     while True:
         last_spaceship_frame = spaceship_frame
         row_control, col_control, space_control = read_controls(canvas)
+
         row_size, column_size = get_frame_size(last_spaceship_frame)
+        if space_control:
+            coroutines.append(fire(canvas, row, column+column_size//2))
         row_range = range(MIN_ROW + 1, MAX_ROW - row_size + 1)
         column_range = range(MIN_COL + 1, MAX_COL - column_size + 1)
 
         row_speed, column_speed = update_speed(row_speed, column_speed, row_control, col_control)
         row += row_speed
         column += column_speed
+
 
         # TODO: перестало работать ограничение корабля, поправить
 
@@ -81,6 +86,7 @@ async def run_spaceship(canvas):
         #     column += column_speed
         # elif column_speed < 0 and column == MAX_COL - column_size + 1:
         #     column += column_speed
+
 
         draw_frame(canvas, row, column, last_spaceship_frame)
         await sleep(1)
