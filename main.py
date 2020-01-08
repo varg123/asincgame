@@ -73,10 +73,28 @@ async def animate_spaceship(canvas, row, column):
             await asyncio.sleep(0)
             draw_frame(canvas, row, column, frame, True)
 
+async def fill_orbit_with_garbage(canvas):
+    garbage = [
+        'duck',
+        'hubble',
+        'lamp',
+        'trash_large',
+        'trash_small',
+        'trash_xl'
+    ]
+    loop = asyncio.get_event_loop()
+    while True:
+        garbage_name = choice(garbage)
+        column = randint(MIN_COL, MAX_COL)
+        coroutines.append(fly_garbage(canvas, column, get_garbage_frame(garbage_name)))
+        for _ in range(10):
+            await asyncio.sleep(0)
+
 
 def draw(canvas):
     canvas.border()
     curses.curs_set(False)
+    global coroutines
     coroutines = []
     for i in range(100):
         col, row = randint(MIN_COL, MAX_COL), randint(MIN_ROW, MAX_ROW)
@@ -87,7 +105,8 @@ def draw(canvas):
     start_column = int((MAX_COL - MIN_COL) / 2 + MIN_COL)
     coroutines.append(fire(canvas, start_row, start_column))
     coroutines.append(animate_spaceship(canvas, 4, 20))
-    coroutines.append(fly_garbage(canvas, 10, get_garbage_frame('duck')))
+    # coroutines.append(fly_garbage(canvas, 10, get_garbage_frame('duck')))
+    coroutines.append(fill_orbit_with_garbage(canvas))
 
     while True:
         for coroutine in coroutines.copy():
