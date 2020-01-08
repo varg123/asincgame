@@ -30,24 +30,22 @@ def get_space_ship_frames():
         with open(join(DIR_FRAMES, name), 'rt', encoding='utf8') as frame_file:
             yield frame_file.read()
 
+async def sleep(tics=1):
+    for _ in range(tics):
+        await asyncio.sleep(0)
 
 async def blink(canvas, row, column, symbol='*', timeout=0):
     timeout = int(timeout)
     while True:
-        for _ in range(timeout):
-            await asyncio.sleep(0)
+        await sleep(timeout)
         canvas.addstr(row, column, symbol, curses.A_DIM)
-        for _ in range(5):
-            await asyncio.sleep(0)
+        await sleep(5)
         canvas.addstr(row, column, symbol)
-        for _ in range(3):
-            await asyncio.sleep(0)
+        await sleep(3)
         canvas.addstr(row, column, symbol, curses.A_BOLD)
-        for _ in range(5):
-            await asyncio.sleep(0)
+        await sleep(5)
         canvas.addstr(row, column, symbol)
-        for _ in range(3):
-            await asyncio.sleep(0)
+        await sleep(3)
 
 
 async def animate_spaceship(canvas, row, column):
@@ -70,7 +68,7 @@ async def animate_spaceship(canvas, row, column):
                 column += col_up
 
             draw_frame(canvas, row, column, frame)
-            await asyncio.sleep(0)
+            await sleep(1)
             draw_frame(canvas, row, column, frame, True)
 
 async def fill_orbit_with_garbage(canvas):
@@ -87,8 +85,7 @@ async def fill_orbit_with_garbage(canvas):
         garbage_name = choice(garbage)
         column = randint(MIN_COL, MAX_COL)
         coroutines.append(fly_garbage(canvas, column, get_garbage_frame(garbage_name)))
-        for _ in range(10):
-            await asyncio.sleep(0)
+        await sleep(10)
 
 
 def draw(canvas):
