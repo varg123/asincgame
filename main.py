@@ -6,6 +6,7 @@ from fire_animation import fire
 from curses_tools import draw_frame, read_controls, get_frame_size
 from space_garbage import fly_garbage
 from os.path import abspath, dirname, join
+from itertools import cycle
 
 TIC_TIMEOUT = 0.1
 MIN_ROW = 0
@@ -30,9 +31,11 @@ def get_space_ship_frames():
         with open(join(DIR_FRAMES, name), 'rt', encoding='utf8') as frame_file:
             yield frame_file.read()
 
+
 async def sleep(tics=1):
     for _ in range(tics):
         await asyncio.sleep(0)
+
 
 async def blink(canvas, row, column, symbol='*', timeout=0):
     timeout = int(timeout)
@@ -48,28 +51,38 @@ async def blink(canvas, row, column, symbol='*', timeout=0):
         await sleep(3)
 
 
-async def animate_spaceship(canvas, row, column):
+async def run_spaceship(canvas):
+    global spaceship_frame
+    row, column = 5, 5
     while True:
-        for frame in get_space_ship_frames():
-            row_up, col_up, _ = read_controls(canvas)
-            row_size, column_size = get_frame_size(frame)
-            if row in range(MIN_ROW + 1, MAX_ROW - row_size + 1):
-                row += row_up
-            elif row_up > 0 and row == MIN_ROW:
-                row += row_up
-            elif row_up < 0 and row == MAX_ROW - row_size + 1:
-                row += row_up
+        last_spaceship_frame = spaceship_frame
+        row_up, col_up, _ = read_controls(canvas)
+        row_size, column_size = get_frame_size(last_spaceship_frame)
+        if row in range(MIN_ROW + 1, MAX_ROW - row_size + 1):
+            row += row_up
+        elif row_up > 0 and row == MIN_ROW:
+            row += row_up
+        elif row_up < 0 and row == MAX_ROW - row_size + 1:
+            row += row_up
 
-            if column in range(MIN_COL + 1, MAX_COL - column_size + 1):
-                column += col_up
-            elif col_up > 0 and column == MIN_COL:
-                column += col_up
-            elif col_up < 0 and column == MAX_COL - column_size + 1:
-                column += col_up
+        if column in range(MIN_COL + 1, MAX_COL - column_size + 1):
+            column += col_up
+        elif col_up > 0 and column == MIN_COL:
+            column += col_up
+        elif col_up < 0 and column == MAX_COL - column_size + 1:
+            column += col_up
 
-            draw_frame(canvas, row, column, frame)
-            await sleep(1)
-            draw_frame(canvas, row, column, frame, True)
+        draw_frame(canvas, row, column, last_spaceship_frame)
+        await sleep(1)
+        draw_frame(canvas, row, column, last_spaceship_frame, True)
+
+
+async def animate_spaceship(canvas):
+    global spaceship_frame
+    for frame in cycle(get_space_ship_frames()):
+        spaceship_frame = frame
+        await sleep()
+
 
 async def fill_orbit_with_garbage(canvas):
     garbage = [
@@ -93,6 +106,8 @@ def draw(canvas):
     curses.curs_set(False)
     global coroutines
     coroutines = []
+    global spaceship_frame
+    spaceship_frame = list(get_space_ship_frames())[0]  # TODO: убрать индексное обращение
     for i in range(100):
         col, row = randint(MIN_COL, MAX_COL), randint(MIN_ROW, MAX_ROW)
         simbol = choice(SYMBOLS)
@@ -101,7 +116,8 @@ def draw(canvas):
     start_row = int((MAX_ROW - MIN_ROW) / 2 + MIN_ROW)
     start_column = int((MAX_COL - MIN_COL) / 2 + MIN_COL)
     coroutines.append(fire(canvas, start_row, start_column))
-    coroutines.append(animate_spaceship(canvas, 4, 20))
+    coroutines.append(animate_spaceship(canvas))
+    coroutines.append(run_spaceship(canvas))
     # coroutines.append(fly_garbage(canvas, 10, get_garbage_frame('duck')))
     coroutines.append(fill_orbit_with_garbage(canvas))
 
