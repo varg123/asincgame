@@ -4,10 +4,11 @@ import asyncio
 from random import randint, choice
 from fire_animation import fire
 from curses_tools import draw_frame, read_controls, get_frame_size
-from space_garbage import fly_garbage
+# from space_garbage import fly_garbage
 from os.path import abspath, dirname, join
 from itertools import cycle
 from physics import update_speed
+from obstacles import Obstacle, show_obstacles, has_collision
 
 TIC_TIMEOUT = 0.1
 MIN_ROW = 0
@@ -63,14 +64,13 @@ async def run_spaceship(canvas):
 
         row_size, column_size = get_frame_size(last_spaceship_frame)
         if space_control:
-            coroutines.append(fire(canvas, row, column+column_size//2))
+            coroutines.append(fire(canvas, row, column + column_size // 2))
         row_range = range(MIN_ROW + 1, MAX_ROW - row_size + 1)
         column_range = range(MIN_COL + 1, MAX_COL - column_size + 1)
 
         row_speed, column_speed = update_speed(row_speed, column_speed, row_control, col_control)
         row += row_speed
         column += column_speed
-
 
         # TODO: перестало работать ограничение корабля, поправить
 
@@ -87,7 +87,6 @@ async def run_spaceship(canvas):
         # elif column_speed < 0 and column == MAX_COL - column_size + 1:
         #     column += column_speed
 
-
         draw_frame(canvas, row, column, last_spaceship_frame)
         await sleep(1)
         draw_frame(canvas, row, column, last_spaceship_frame, True)
@@ -100,6 +99,26 @@ async def animate_spaceship(canvas):
         await sleep()
 
 
+async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
+    """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
+    rows_number, columns_number = canvas.getmaxyx()
+
+    global obstacles
+    column = max(column, 0)
+    column = min(column, columns_number - 1)
+
+    row = 0
+
+    while row < rows_number:
+        draw_frame(canvas, row, column, garbage_frame)
+        obstacle = Obstacle(row, column, *get_frame_size(garbage_frame))
+        obstacles.append(obstacle)
+        await asyncio.sleep(0)
+        draw_frame(canvas, row, column, garbage_frame, negative=True)
+        obstacles.remove(obstacle)
+        row += speed
+
+
 async def fill_orbit_with_garbage(canvas):
     garbage = [
         'duck',
@@ -109,7 +128,6 @@ async def fill_orbit_with_garbage(canvas):
         'trash_small',
         'trash_xl'
     ]
-    loop = asyncio.get_event_loop()
     while True:
         garbage_name = choice(garbage)
         column = randint(MIN_COL, MAX_COL)
@@ -124,6 +142,8 @@ def draw(canvas):
     coroutines = []
     global spaceship_frame
     spaceship_frame = list(get_space_ship_frames())[0]  # TODO: убрать индексное обращение
+    global obstacles
+    obstacles = []
     for i in range(100):
         col, row = randint(MIN_COL, MAX_COL), randint(MIN_ROW, MAX_ROW)
         simbol = choice(SYMBOLS)
@@ -134,6 +154,7 @@ def draw(canvas):
     coroutines.append(fire(canvas, start_row, start_column))
     coroutines.append(animate_spaceship(canvas))
     coroutines.append(run_spaceship(canvas))
+    coroutines.append(show_obstacles(canvas, obstacles))
     # coroutines.append(fly_garbage(canvas, 10, get_garbage_frame('duck')))
     coroutines.append(fill_orbit_with_garbage(canvas))
 
