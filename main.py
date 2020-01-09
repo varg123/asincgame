@@ -2,7 +2,7 @@ import time
 import curses
 import asyncio
 from random import randint, choice
-from fire_animation import fire
+# from fire_animation import fire
 from curses_tools import draw_frame, read_controls, get_frame_size
 # from space_garbage import fly_garbage
 from os.path import abspath, dirname, join
@@ -119,6 +119,38 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         row += speed
 
 
+async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0):
+    """Display animation of gun shot. Direction and speed can be specified."""
+    global obstacles
+    row, column = start_row, start_column
+
+    canvas.addstr(round(row), round(column), '*')
+    await asyncio.sleep(0)
+
+    canvas.addstr(round(row), round(column), 'O')
+    await asyncio.sleep(0)
+    canvas.addstr(round(row), round(column), ' ')
+
+    row += rows_speed
+    column += columns_speed
+
+    symbol = '-' if columns_speed else '|'
+
+    rows, columns = canvas.getmaxyx()
+    max_row, max_column = rows - 1, columns - 1
+
+    curses.beep()
+
+    while 0 < row < max_row and 0 < column < max_column:
+        if any(map(lambda x: x.has_collision(row, column), obstacles)):
+            break
+        canvas.addstr(round(row), round(column), symbol)
+        await asyncio.sleep(0)
+        canvas.addstr(round(row), round(column), ' ')
+        row += rows_speed
+        column += columns_speed
+
+
 async def fill_orbit_with_garbage(canvas):
     garbage = [
         'duck',
@@ -151,7 +183,7 @@ def draw(canvas):
         coroutines.append(blink(canvas, row, col, simbol, start_timeout))
     start_row = int((MAX_ROW - MIN_ROW) / 2 + MIN_ROW)
     start_column = int((MAX_COL - MIN_COL) / 2 + MIN_COL)
-    coroutines.append(fire(canvas, start_row, start_column))
+    # coroutines.append(fire(canvas, start_row, start_column))
     coroutines.append(animate_spaceship(canvas))
     coroutines.append(run_spaceship(canvas))
     coroutines.append(show_obstacles(canvas, obstacles))
