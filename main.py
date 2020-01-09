@@ -104,6 +104,7 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
     rows_number, columns_number = canvas.getmaxyx()
 
     global obstacles
+    global obstacles_in_last_collisions
     column = max(column, 0)
     column = min(column, columns_number - 1)
 
@@ -114,8 +115,12 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         obstacle = Obstacle(row, column, *get_frame_size(garbage_frame))
         obstacles.append(obstacle)
         await asyncio.sleep(0)
+
         draw_frame(canvas, row, column, garbage_frame, negative=True)
         obstacles.remove(obstacle)
+        if obstacle in obstacles_in_last_collisions:
+            obstacles_in_last_collisions.remove(obstacle)
+            return
         row += speed
 
 
@@ -123,6 +128,7 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
     """Display animation of gun shot. Direction and speed can be specified."""
     global obstacles
     row, column = start_row, start_column
+    global obstacles_in_last_collisions
 
     canvas.addstr(round(row), round(column), '*')
     await asyncio.sleep(0)
@@ -142,8 +148,12 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
     curses.beep()
 
     while 0 < row < max_row and 0 < column < max_column:
-        if any(map(lambda x: x.has_collision(row, column), obstacles)):
-            break
+        for obstacle in obstacles:
+            if obstacle.has_collision(row, column):
+                obstacles_in_last_collisions.append(obstacle)
+                return
+        # if any(map(lambda x: x.has_collision(row, column), obstacles)):
+        #     return
         canvas.addstr(round(row), round(column), symbol)
         await asyncio.sleep(0)
         canvas.addstr(round(row), round(column), ' ')
@@ -172,6 +182,8 @@ def draw(canvas):
     curses.curs_set(False)
     global coroutines
     coroutines = []
+    global obstacles_in_last_collisions
+    obstacles_in_last_collisions = []
     global spaceship_frame
     spaceship_frame = list(get_space_ship_frames())[0]  # TODO: убрать индексное обращение
     global obstacles
