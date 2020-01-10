@@ -63,7 +63,7 @@ async def run_spaceship(canvas):
         row_control, col_control, space_control = read_controls(canvas)
 
         row_size, column_size = get_frame_size(last_spaceship_frame)
-        if space_control and year > 2020:
+        if space_control:# and year > 2020:
             coroutines.append(fire(canvas, row, column + column_size // 2))
 
         row_speed, column_speed = update_speed(row_speed, column_speed, row_control, col_control)
@@ -198,8 +198,8 @@ async def game_time():
     global game_over
     while True:
         await sleep(20)
-        # if not game_over:
-        #     year += 1
+        if not game_over:
+            year += 1
 
 
 def draw(canvas):
