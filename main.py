@@ -20,19 +20,18 @@ SYMBOLS = '+*.:'
 DIR_FRAMES = join(dirname(abspath(__file__)), 'frames')
 
 
-def get_garbage_frame(name):
+def get_frame(name):
     with open(join(DIR_FRAMES, f"{name}.txt"), 'rt', encoding='utf8') as frame_file:
         return frame_file.read()
 
 
 def get_space_ship_frames():
     names_of_the_frames = [
-        'rocket_frame_1.txt',
-        'rocket_frame_2.txt'
+        'rocket_frame_1',
+        'rocket_frame_2'
     ]
     for name in names_of_the_frames:
-        with open(join(DIR_FRAMES, name), 'rt', encoding='utf8') as frame_file:
-            yield frame_file.read()
+        yield get_frame(name)
 
 
 async def sleep(tics=1):
@@ -87,6 +86,12 @@ async def run_spaceship(canvas):
         #     column += column_speed
         # elif column_speed < 0 and column == MAX_COL - column_size + 1:
         #     column += column_speed
+
+        for obstacle in obstacles:
+            if obstacle.has_collision(row, column, row_size, column_size):
+
+                coroutines.append(show_gameover(canvas))
+                return
 
         draw_frame(canvas, row, column, last_spaceship_frame)
         await sleep(1)
@@ -176,9 +181,18 @@ async def fill_orbit_with_garbage(canvas):
     while True:
         garbage_name = choice(garbage)
         column = randint(MIN_COL, MAX_COL)
-        coroutines.append(fly_garbage(canvas, column, get_garbage_frame(garbage_name)))
+        coroutines.append(fly_garbage(canvas, column, get_frame(garbage_name)))
         await sleep(10)
 
+async def show_gameover(canvas):
+    game_over_frame = get_frame('game_over')
+    game_over_height, game_over_length = get_frame_size(game_over_frame)
+    row = (MAX_ROW - game_over_height) // 2
+    column = (MAX_COL - game_over_length) // 2
+    while True:
+        draw_frame(canvas, row, column, game_over_frame)
+        await sleep(1)
+        draw_frame(canvas, row, column, game_over_frame, True)
 
 def draw(canvas):
     canvas.border()
@@ -202,7 +216,7 @@ def draw(canvas):
     coroutines.append(animate_spaceship(canvas))
     coroutines.append(run_spaceship(canvas))
     coroutines.append(show_obstacles(canvas, obstacles))
-    # coroutines.append(fly_garbage(canvas, 10, get_garbage_frame('duck')))
+    # coroutines.append(fly_garbage(canvas, 10, get_frame('duck')))
     coroutines.append(fill_orbit_with_garbage(canvas))
 
     while True:
