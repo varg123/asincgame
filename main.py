@@ -89,7 +89,6 @@ async def run_spaceship(canvas):
 
         for obstacle in obstacles:
             if obstacle.has_collision(row, column, row_size, column_size):
-
                 coroutines.append(show_gameover(canvas))
                 return
 
@@ -184,6 +183,7 @@ async def fill_orbit_with_garbage(canvas):
         coroutines.append(fly_garbage(canvas, column, get_frame(garbage_name)))
         await sleep(10)
 
+
 async def show_gameover(canvas):
     game_over_frame = get_frame('game_over')
     game_over_height, game_over_length = get_frame_size(game_over_frame)
@@ -193,6 +193,16 @@ async def show_gameover(canvas):
         draw_frame(canvas, row, column, game_over_frame)
         await sleep(1)
         draw_frame(canvas, row, column, game_over_frame, True)
+
+
+async def show_footer_message(canvas):
+    message = str(year)
+    row = 1
+    column = (MAX_COL_FOOTER - len(message)) // 2
+    while True:
+        window_footer.addstr(row, column, message)
+        await asyncio.sleep(0)
+
 
 def draw(canvas):
     canvas.border()
@@ -205,6 +215,8 @@ def draw(canvas):
     spaceship_frame = list(get_space_ship_frames())[0]  # TODO: убрать индексное обращение
     global obstacles
     obstacles = []
+    global year
+    year = 1957
     for i in range(100):
         col, row = randint(MIN_COL, MAX_COL), randint(MIN_ROW, MAX_ROW)
         simbol = choice(SYMBOLS)
@@ -218,6 +230,7 @@ def draw(canvas):
     coroutines.append(show_obstacles(canvas, obstacles))
     # coroutines.append(fly_garbage(canvas, 10, get_frame('duck')))
     coroutines.append(fill_orbit_with_garbage(canvas))
+    coroutines.append(show_footer_message(canvas))
 
     while True:
         for coroutine in coroutines.copy():
@@ -225,7 +238,9 @@ def draw(canvas):
                 coroutine.send(None)
             except StopIteration:
                 coroutines.remove(coroutine)
+        canvas.border()
         canvas.refresh()
+        window_footer.refresh()
         time.sleep(TIC_TIMEOUT)
 
 
@@ -237,6 +252,13 @@ def init_scope_range():
     MAX_ROW, MAX_COL = rows_count - 2, cols_count - 2
     MIN_ROW, MIN_COL = 1, 1
     window.nodelay(True)
+    global window_footer
+    window_footer = window.derwin(3, MAX_COL, MAX_ROW - 1, 1)
+    rows_count, cols_count = window_footer.getmaxyx()
+    global MAX_ROW_FOOTER, MAX_COL_FOOTER, MIN_ROW_FOOTER, MIN_COL_FOOTER
+    MAX_ROW_FOOTER, MAX_COL_FOOTER = rows_count - 2, cols_count - 2
+    MIN_ROW_FOOTER, MIN_COL_FOOTER = 1, 1
+    window_footer.nodelay(True)
 
 
 if __name__ == '__main__':
