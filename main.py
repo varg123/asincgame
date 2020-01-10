@@ -10,7 +10,7 @@ from obstacles import Obstacle, show_obstacles
 from explosion import explode
 from game_scenario import get_garbage_delay_tics, PHRASES
 
-TIC_TIMEOUT = 0.05
+TIC_TIMEOUT = 0.02
 MIN_ROW = 0
 MIN_COL = 0
 MAX_ROW = 0
@@ -103,7 +103,8 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
         garbage_height, garbage_length = get_frame_size(garbage_frame)
         obstacle = Obstacle(row, column, garbage_height, garbage_length)
         obstacles.append(obstacle)
-        if delay := get_garbage_delay_tics(year):
+        delay = get_garbage_delay_tics(year)
+        if delay:
             await sleep(delay)
         draw_frame(canvas, row, column, garbage_frame, negative=True)
         obstacles.remove(obstacle)
@@ -164,8 +165,8 @@ async def fill_orbit_with_garbage(canvas):
         garbage_name = choice(garbage)
         column = randint(MIN_COL, MAX_COL)
         coroutines.append(fly_garbage(canvas, column, get_frame(garbage_name)))
-
-        if delay := get_garbage_delay_tics(year):
+        delay = get_garbage_delay_tics(year)
+        if delay:
             await sleep(delay * 2)
         await sleep(20)
 
@@ -197,8 +198,8 @@ async def game_time():
     global game_over
     while True:
         await sleep(20)
-        if not game_over:
-            year += 1
+        # if not game_over:
+        #     year += 1
 
 
 def draw(canvas):
