@@ -55,6 +55,7 @@ async def blink(canvas, row, column, symbol='*', timeout=0):
 async def run_spaceship(canvas):
     global spaceship_frame
     global coroutines
+    global year
     row, column = 5, 8
     row_speed = column_speed = 0
     while True:
@@ -62,7 +63,7 @@ async def run_spaceship(canvas):
         row_control, col_control, space_control = read_controls(canvas)
 
         row_size, column_size = get_frame_size(last_spaceship_frame)
-        if space_control:
+        if space_control and year > 2020:
             coroutines.append(fire(canvas, row, column + column_size // 2))
 
         row_speed, column_speed = update_speed(row_speed, column_speed, row_control, col_control)
@@ -137,6 +138,7 @@ async def fire(canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
     curses.beep()
 
     while 0 < row < max_row and 0 < column < max_column:
+
         for obstacle in obstacles:
             if obstacle.has_collision(row, column):
                 obstacles_in_last_collisions.append(obstacle)
